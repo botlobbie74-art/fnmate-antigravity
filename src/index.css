@@ -1,0 +1,40 @@
+@import "tailwindcss";
+
+@theme {
+  --color-glass: rgba(255, 255, 255, 0.05);
+  --color-glass-dark: rgba(0, 0, 0, 0.2);
+  --color-glass-border: rgba(255, 255, 255, 0.1);
+  --color-glass-border-dark: rgba(255, 255, 255, 0.05);
+  
+  --animate-scan: scan 3s linear infinite;
+  
+  @keyframes scan {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+}
+
+@layer utilities {
+  .glass {
+    @apply bg-white/20 dark:bg-black/20 backdrop-blur-lg border border-white/30 dark:border-white/10 shadow-xl;
+  }
+  
+  .glass-panel {
+    @apply bg-white/40 dark:bg-black/40 backdrop-blur-2xl border border-white/40 dark:border-white/5;
+  }
+}
+
+body {
+  @apply bg-slate-50 text-slate-900 transition-colors duration-300;
+}
+
+body.dark {
+  @apply bg-slate-950 text-slate-50;
+  /* Apple-style dark gradient background */
+  background-image: radial-gradient(circle at top right, #1e1b4b 0%, #020617 40%, #000000 100%);
+  background-attachment: fixed;
+}
