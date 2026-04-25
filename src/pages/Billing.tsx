@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAppStore } from '../store/useAppStore';
 import { CreditCard, CheckCircle2, AlertTriangle, ExternalLink, Loader2 } from 'lucide-react';
 
@@ -9,6 +9,16 @@ export default function Billing() {
 
   const isGrinder = currentUser?.plan === 'grinder';
   const isPro = currentUser?.plan === 'pro';
+
+  useEffect(() => {
+    const handlePageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) {
+        setLoadingPlan(null);
+      }
+    };
+    window.addEventListener('pageshow', handlePageShow);
+    return () => window.removeEventListener('pageshow', handlePageShow);
+  }, []);
 
   const getPlanName = () => {
     if (isPro) return "PRO (Élite)";

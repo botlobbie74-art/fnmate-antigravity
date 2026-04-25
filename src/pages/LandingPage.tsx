@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Zap, Target, Users, CheckCircle, Crown } from 'lucide-react';
 import { useAppStore } from '../store/useAppStore';
@@ -7,6 +7,16 @@ export default function LandingPage() {
   const { authUserId } = useAppStore();
   const [isAnnual, setIsAnnual] = useState(false);
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+
+  useEffect(() => {
+    const handlePageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) {
+        setLoadingPlan(null);
+      }
+    };
+    window.addEventListener('pageshow', handlePageShow);
+    return () => window.removeEventListener('pageshow', handlePageShow);
+  }, []);
 
   const handleCheckout = async (planId: string) => {
     if (!authUserId) return; // Managed by UI links
