@@ -24,6 +24,9 @@ interface AppState {
   toxicityFilterEnabled: boolean;
   toggleToxicityFilter: () => void;
 
+  showTutorial: boolean;
+  setShowTutorial: (show: boolean) => void;
+
   fetchSessionToken: () => Promise<string | null>;
 }
 
@@ -46,6 +49,9 @@ export const useAppStore = create<AppState>((set) => ({
 
   toxicityFilterEnabled: false,
   toggleToxicityFilter: () => set((state) => ({ toxicityFilterEnabled: !state.toxicityFilterEnabled })),
+
+  showTutorial: false,
+  setShowTutorial: (show) => set({ showTutorial: show }),
 
   fetchSessionToken: async () => {
     const { supabase } = await import('../lib/supabase');

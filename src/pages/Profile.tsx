@@ -17,7 +17,7 @@ const AVAILABLE_MODES = [
 ];
 
 export default function ProfilePage() {
-  const { authUserId, currentUser, setCurrentUser, toxicityFilterEnabled, toggleToxicityFilter } = useAppStore();
+  const { authUserId, currentUser, setCurrentUser, toxicityFilterEnabled, toggleToxicityFilter, setShowTutorial } = useAppStore();
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [status, setStatus] = useState<{type: 'error'|'success', text: string} | null>(null);
@@ -201,10 +201,20 @@ export default function ProfilePage() {
           localStorage.removeItem('fnmate_referred_by');
         }
 
+        const isFirstTime = !currentUser;
+        
         setCurrentUser(data);
         if (showSuccess) {
-          setStatus({ type: 'success', text: "Modifications sauvegardées ✅" });
-          setTimeout(() => setStatus(null), 3000);
+          setStatus({ type: 'success', text: isFirstTime ? "Profil créé avec succès ! ✅" : "Modifications sauvegardées ✅" });
+          
+          if (isFirstTime) {
+            // First time creation: show tutorial and redirect
+            setShowTutorial(true);
+            // Tutorial overlay will handle navigation, but just in case
+            setTimeout(() => setStatus(null), 3000);
+          } else {
+            setTimeout(() => setStatus(null), 3000);
+          }
         }
       }
     } catch (err: any) {
@@ -214,11 +224,14 @@ export default function ProfilePage() {
 
   return (
     <div className="max-w-3xl mx-auto">
-      <div className="glass rounded-3xl p-8">
-        <h2 className="text-3xl font-bold mb-8 flex items-center gap-3">
+      <div className="glass rounded-3xl p-8 border border-blue-500/10">
+        <h2 className="text-3xl font-black mb-2 flex items-center gap-3 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
           <UserIcon size={32} className="text-blue-500" />
-          Configuration du Profil
+          {currentUser ? 'Configuration du Profil' : 'Création de ton Profil FNMATE'}
         </h2>
+        {!currentUser && (
+          <p className="text-slate-400 mb-8 font-medium">Complète ton profil pour débloquer le matchmaking et toutes les fonctionnalités de l'application.</p>
+        )}
 
         {status && (
           <div className={`p-4 rounded-xl mb-8 border ${status.type === 'error' ? 'bg-red-500/10 border-red-500/20 text-red-400' : 'bg-green-500/10 border-green-500/20 text-green-400'}`}>
@@ -435,15 +448,16 @@ export default function ProfilePage() {
                 className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-blue-600 hover:bg-blue-700 text-white font-black uppercase tracking-wider rounded-xl transition-all active:scale-[0.98] shadow-lg shadow-blue-600/20"
               >
                 <Save size={20} />
-                Sauvegarder mon profil
+                {currentUser ? 'Sauvegarder mon profil' : 'Créer mon profil et Commencer'}
               </button>
             </div>
           </div>
 
-          <div className="pt-6 border-t border-slate-200 dark:border-white/10 mt-6 space-y-4 animate-fade-in">
-            <h3 className="text-xl font-bold flex items-center gap-2">
-              <ShieldAlert size={24} className="text-blue-500" />
-              Réglages & Sécurité
+          {currentUser && (
+            <div className="pt-6 border-t border-slate-200 dark:border-white/10 mt-6 space-y-4 animate-fade-in">
+              <h3 className="text-xl font-bold flex items-center gap-2">
+                <ShieldAlert size={24} className="text-blue-500" />
+                Réglages & Sécurité
             </h3>
             
             <div className="flex items-center justify-between glass p-4 rounded-xl">
@@ -620,7 +634,7 @@ export default function ProfilePage() {
               </div>
 
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>

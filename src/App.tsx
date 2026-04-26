@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Navbar } from './components/layout/Navbar';
 import LandingPage from './pages/LandingPage';
 import Matchmaking from './pages/Matchmaking';
@@ -12,9 +12,12 @@ import { useAppStore } from './store/useAppStore';
 import { supabase } from './lib/supabase';
 import { SocialProofTicker } from './components/ui/SocialProofTicker';
 import { PaymentCallback } from './components/ui/PaymentCallback';
+import { TutorialModal } from './components/ui/TutorialModal';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { authUserId, isAuthLoading } = useAppStore();
+  const { authUserId, isAuthLoading, currentUser } = useAppStore();
+  const location = useLocation();
+
   if (isAuthLoading) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
@@ -25,11 +28,14 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   if (!authUserId) {
     return <Navigate to="/auth" replace />;
   }
+  if (!currentUser && location.pathname !== '/profile') {
+    return <Navigate to="/profile" replace />;
+  }
   return <>{children}</>;
 }
 
 function PublicRoute({ children }: { children: React.ReactNode }) {
-  const { authUserId, isAuthLoading } = useAppStore();
+  const { authUserId, isAuthLoading, currentUser } = useAppStore();
   if (isAuthLoading) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
@@ -38,6 +44,7 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
     );
   }
   if (authUserId) {
+    if (!currentUser) return <Navigate to="/profile" replace />;
     return <Navigate to="/players" replace />;
   }
   return children;
@@ -119,6 +126,7 @@ function App() {
         </footer>
         <SocialProofTicker />
         <PaymentCallback />
+        <TutorialModal />
       </div>
     </Router>
   );
