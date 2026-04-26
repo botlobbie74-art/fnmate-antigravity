@@ -14,13 +14,21 @@ export default function PlayersList() {
 
   useEffect(() => {
     const fetchPlayers = async () => {
-      if (!supabase) return;
-      setLoading(true);
-      const { data, error } = await supabase.from('profiles').select('*').limit(100);
-      if (!error && data) {
-        setPlayers(data as Profile[]);
+      if (!supabase) {
+        setLoading(false);
+        return;
       }
-      setLoading(false);
+      setLoading(true);
+      try {
+        const { data, error } = await supabase.from('profiles').select('*').limit(100);
+        if (!error && data) {
+          setPlayers(data as Profile[]);
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
     };
     fetchPlayers();
   }, []);

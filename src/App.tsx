@@ -52,13 +52,20 @@ function App() {
 
     // Setup Supabase Auth State tracking
     if (supabase) {
+      // Fallback timeout to prevent infinite loading if Supabase hangs
+      const fallbackTimeout = setTimeout(() => {
+        setIsAuthLoading(false);
+      }, 2000);
+
       supabase.auth.getSession().then(({ data: { session }, error }) => {
         if (error) throw error;
         setAuthUserId(session?.user?.id || null);
         setIsAuthLoading(false);
+        clearTimeout(fallbackTimeout);
       }).catch(err => {
         console.error("Session fetch error:", err);
         setIsAuthLoading(false);
+        clearTimeout(fallbackTimeout);
       });
 
       const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {

@@ -80,16 +80,24 @@ export default function Matchmaking() {
   useEffect(() => {
     let active = true;
     const fetchPlayers = async () => {
-      if (!supabase) return;
-      const { data, error } = await supabase.from('profiles').select('*');
-      if (error) {
-        console.error('Erreur récupération profils:', error);
-      } else if (data && active) {
-        setOnlineUsers(data as Profile[]);
+      if (!supabase) {
+        setIsScanning(false);
+        return;
       }
-      setTimeout(() => {
-        if (active) setIsScanning(false);
-      }, 1500); // minimum 1.5s visual scan
+      try {
+        const { data, error } = await supabase.from('profiles').select('*');
+        if (error) {
+          console.error('Erreur récupération profils:', error);
+        } else if (data && active) {
+          setOnlineUsers(data as Profile[]);
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setTimeout(() => {
+          if (active) setIsScanning(false);
+        }, 1500); // minimum 1.5s visual scan
+      }
     };
 
     setIsScanning(true);
