@@ -74,37 +74,9 @@ export default function Matchmaking() {
   const [filterRank, setFilterRank] = useState<string>('Tous les rangs');
   const [filterPlatform, setFilterPlatform] = useState<string>('Toutes plateformes');
   const [synergyMode, setSynergyMode] = useState<'miroir' | 'complementaire'>('complementaire');
-  const [isScanning, setIsScanning] = useState(true);
+  const [isScanning, setIsScanning] = useState(false);
+  const [hasScanned, setHasScanned] = useState(false);
   const [loadingPayment, setLoadingPayment] = useState(false);
-
-  useEffect(() => {
-    let active = true;
-    const fetchPlayers = async () => {
-      if (!supabase) {
-        setIsScanning(false);
-        return;
-      }
-      try {
-        const { data, error } = await supabase.from('profiles').select('*');
-        if (error) {
-          console.error('Erreur récupération profils:', error);
-        } else if (data && active) {
-          setOnlineUsers(data as Profile[]);
-        }
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setTimeout(() => {
-          if (active) setIsScanning(false);
-        }, 1500); // minimum 1.5s visual scan
-      }
-    };
-
-    setIsScanning(true);
-    fetchPlayers();
-    
-    return () => { active = false; };
-  }, [setOnlineUsers]);
 
   const [timeLeft, setTimeLeft] = useState<number>(0);
   const [matchCounts, setMatchCounts] = useState<{[key: string]: number}>({});
@@ -131,13 +103,40 @@ export default function Matchmaking() {
     localStorage.setItem(`fnmate_matches_${authUserId}_${today}`, newCount.toString());
   };
 
-  const canUseAI = isPro || (matchCounts[new Date().toISOString().split('T')[0]] || 0) < 3;
+  const canUseMatchmaking = isPro || (matchCounts[new Date().toISOString().split('T')[0]] || 0) < 3;
 
-  const handleRunAIAnalysis = async (player: Profile) => {
-    if (!canUseAI) {
-      // Potentially show a modal to upgrade
+  const startMatchmaking = async () => {
+    if (!canUseMatchmaking) {
+      alert("Tu as atteint ta limite de 3 matchmakings gratuits aujourd'hui. Passe au plan Grinder ou Elite pour continuer !");
       return;
     }
+    
+    if (!isPro) incrementMatchCount();
+    
+    setIsScanning(true);
+    setHasScanned(true);
+
+    if (!supabase) {
+      setIsScanning(false);
+      return;
+    }
+    try {
+      const { data, error } = await supabase.from('profiles').select('*');
+      if (error) {
+        console.error('Erreur récupération profils:', error);
+      } else if (data) {
+        setOnlineUsers(data as Profile[]);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setTimeout(() => {
+        setIsScanning(false);
+      }, 1500); // minimum 1.5s visual scan
+    }
+  };
+  
+  const handleRunAIAnalysis = async (player: Profile) => {
     setIsAnalyzing(true);
     setSelectedAnalysisPlayer(player);
     
@@ -146,7 +145,6 @@ export default function Matchmaking() {
       try {
         const result = await m.matchCompatibility(currentUser, player);
         setAnalysisResult(result);
-        if (!isPro) incrementMatchCount();
       } catch (err) {
         console.error("AI Analysis failed", err);
         setAnalysisResult({ 
@@ -308,7 +306,7 @@ export default function Matchmaking() {
             </p>
             {!isPro && (
               <div className="px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-[10px] font-black uppercase tracking-widest text-blue-400">
-                Analyses IA : {3 - (matchCounts[new Date().toISOString().split('T')[0]] || 0)} / 3 restantes
+                Matchmakings Gratuits : {3 - (matchCounts[new Date().toISOString().split('T')[0]] || 0)} / 3
               </div>
             )}
           </div>
@@ -431,6 +429,31 @@ export default function Matchmaking() {
             </p>
           </div>
         </div>
+      ) : !hasScanned ? (
+        <div className="flex flex-col items-center justify-center py-20 space-y-8 glass-panel rounded-3xl border border-blue-500/20 relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-purple-500"></div>
+          <div className="w-20 h-20 rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-500 border border-blue-500/20">
+            <Radar size={40} />
+          </div>
+          <div className="text-center max-w-md px-4">
+            <h3 className="text-2xl font-black mb-2">Prêt à trouver ton duo ?</h3>
+            <p className="text-slate-400 mb-6">
+              L'algorithme ALEX va scanner les joueurs en ligne et te trouver ceux qui correspondent parfaitement à ton style de jeu (Role, Aim, IQ).
+            </p>
+            <button 
+              onClick={startMatchmaking}
+              className="w-full sm:w-auto px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-black shadow-lg shadow-blue-500/20 active:scale-95 transition-all flex items-center justify-center gap-3 mx-auto"
+            >
+              <Zap size={20} className="fill-white" />
+              Lancer le Matchmaking
+            </button>
+            {!isPro && (
+              <p className="text-xs text-slate-500 mt-4 uppercase tracking-widest font-bold">
+                {3 - (matchCounts[new Date().toISOString().split('T')[0]] || 0)} essais gratuits restants aujourd'hui
+              </p>
+            )}
+          </div>
+        </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in">
           {filteredUsers.length > 0 ? (
@@ -440,7 +463,7 @@ export default function Matchmaking() {
                 player={player} 
                 matchScore={player.matchScore} 
                 onAnalyze={handleRunAIAnalysis}
-                canAnalyze={canUseAI}
+                canAnalyze={true}
               />
             ))
           ) : (
