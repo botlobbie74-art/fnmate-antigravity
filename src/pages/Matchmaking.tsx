@@ -80,9 +80,6 @@ export default function Matchmaking() {
 
   const [timeLeft, setTimeLeft] = useState<number>(0);
   const [matchCounts, setMatchCounts] = useState<{[key: string]: number}>({});
-  const [selectedAnalysisPlayer, setSelectedAnalysisPlayer] = useState<Profile | null>(null);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [analysisResult, setAnalysisResult] = useState<{score: number, explanation: string} | null>(null);
 
   const isPro = currentUser?.plan === 'pro' || currentUser?.plan === 'grinder';
   const balance = currentUser?.divin_balance || 0;
@@ -134,31 +131,6 @@ export default function Matchmaking() {
         setIsScanning(false);
       }, 1500); // minimum 1.5s visual scan
     }
-  };
-  
-  const handleRunAIAnalysis = async (player: Profile) => {
-    setIsAnalyzing(true);
-    setSelectedAnalysisPlayer(player);
-    
-    // Call Gemini
-    import('../lib/gemini').then(async (m) => {
-      try {
-        const result = await m.matchCompatibility(currentUser, player);
-        setAnalysisResult(result);
-      } catch (err) {
-        console.error("AI Analysis failed", err);
-        setAnalysisResult({ 
-          score: 0, 
-          explanation: "Impossible de générer l'analyse (erreur réseau ou IA indisponible).",
-          synergyFactors: []
-        });
-      } finally {
-        setIsAnalyzing(false);
-      }
-    }).catch((err) => {
-      console.error("Failed to load Gemini module", err);
-      setIsAnalyzing(false);
-    });
   };
   
   useEffect(() => {
@@ -237,63 +209,6 @@ export default function Matchmaking() {
 
   return (
     <div className="w-full">
-      {/* Modal Analyse IA */}
-      {selectedAnalysisPlayer && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="glass-panel w-full max-w-lg p-8 rounded-3xl animate-scale-in relative border border-white/10 shadow-2xl">
-            <button 
-              onClick={() => { setSelectedAnalysisPlayer(null); setAnalysisResult(null); }}
-              className="absolute top-4 right-4 p-2 text-slate-400 hover:text-white transition-colors"
-            >
-              <X size={24} />
-            </button>
-            
-            <div className="flex flex-col items-center text-center">
-              <div className="w-20 h-20 rounded-2xl bg-gradient-to-tr from-blue-500 to-purple-500 flex items-center justify-center text-white shadow-lg mb-6">
-                <Brain size={40} className={isAnalyzing ? "animate-pulse" : ""} />
-              </div>
-              
-              <h3 className="text-2xl font-black mb-2 uppercase tracking-tight">
-                Analyse de Synergie <span className="text-blue-500">ALEX</span>
-              </h3>
-              <p className="text-sm text-slate-400 mb-8">
-                Matching : {currentUser?.epic_name} x {selectedAnalysisPlayer.epic_name}
-              </p>
-
-              {isAnalyzing ? (
-                <div className="py-12 flex flex-col items-center gap-4">
-                  <Loader2 size={40} className="animate-spin text-blue-500" />
-                  <p className="text-sm font-bold text-slate-500 animate-pulse uppercase tracking-widest">Calcul de la meta en cours...</p>
-                </div>
-              ) : analysisResult ? (
-                <div className="space-y-6 w-full">
-                  <div className="flex items-center justify-center gap-4">
-                    <div className={`text-6xl font-black ${analysisResult.score >= 80 ? 'text-green-500' : analysisResult.score >= 50 ? 'text-yellow-500' : 'text-red-500'}`}>
-                      {analysisResult.score}%
-                    </div>
-                    <div className="text-left">
-                      <div className="text-xs font-bold text-slate-500 uppercase tracking-widest">Compatibilité</div>
-                      <div className="text-sm font-black text-white uppercase">{analysisResult.score >= 80 ? 'Perfect Combo' : analysisResult.score >= 50 ? 'Good Potential' : 'Stay Away'}</div>
-                    </div>
-                  </div>
-                  
-                  <div className="p-4 rounded-xl bg-white/5 border border-white/10 text-slate-300 italic text-sm leading-relaxed">
-                    "{analysisResult.explanation}"
-                  </div>
-
-                  <Link 
-                    to={`/messages?user=${selectedAnalysisPlayer.id}`}
-                    className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-black uppercase tracking-widest rounded-xl shadow-lg shadow-blue-500/20 active:scale-95 transition-all flex items-center justify-center gap-2"
-                  >
-                    Lancer l'invitation <Zap size={18} fill="currentColor" />
-                  </Link>
-                </div>
-              ) : null}
-            </div>
-          </div>
-        </div>
-      )}
-
       <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-8 gap-4">
         <div>
           <h2 className="text-3xl font-bold flex items-center gap-3">
@@ -462,8 +377,6 @@ export default function Matchmaking() {
                 key={player.id} 
                 player={player} 
                 matchScore={player.matchScore} 
-                onAnalyze={handleRunAIAnalysis}
-                canAnalyze={true}
               />
             ))
           ) : (

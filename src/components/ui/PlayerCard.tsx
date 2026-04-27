@@ -6,10 +6,8 @@ import { Link } from 'react-router-dom';
 
 export const PlayerCard: React.FC<{ 
   player: Profile, 
-  matchScore?: number,
-  onAnalyze?: (player: Profile) => void,
-  canAnalyze?: boolean
-}> = ({ player, matchScore, onAnalyze, canAnalyze = true }) => {
+  matchScore?: number
+}> = ({ player, matchScore }) => {
   const { currentUser } = useAppStore();
 
   const getRankColor = (rank: string) => {
@@ -124,19 +122,6 @@ export const PlayerCard: React.FC<{
         </div>
 
         <div className="pt-2 flex flex-col gap-2">
-          {onAnalyze && (
-            <button
-              onClick={() => onAnalyze(player)}
-              disabled={!canAnalyze}
-              className={`flex items-center justify-center gap-2 w-full py-2.5 rounded-lg text-sm font-black uppercase tracking-wider transition-all border-2
-                ${canAnalyze 
-                  ? 'border-blue-500/30 text-blue-500 hover:bg-blue-500 hover:text-white' 
-                  : 'border-slate-800 text-slate-600 cursor-not-allowed opacity-50'}
-              `}
-            >
-              <Brain size={16} /> {canAnalyze ? "IA Scan Analysis" : "Limite Atteinte"}
-            </button>
-          )}
           <Link 
             to={`/messages?user=${player.id}`}
             className={`flex items-center justify-center gap-2 w-full py-2.5 rounded-lg text-sm font-black uppercase tracking-wider transition-all
