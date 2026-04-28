@@ -22,6 +22,7 @@ export default function ProfilePage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [status, setStatus] = useState<{type: 'error'|'success', text: string} | null>(null);
   const [rewardChoice, setRewardChoice] = useState<'flash' | 'divin' | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
   
   const [formData, setFormData] = useState<Partial<Profile>>(currentUser || {
     epic_name: '',
@@ -161,64 +162,88 @@ export default function ProfilePage() {
 
   const handleSave = async (showSuccess = true) => {
     try {
-      if (!formData.epic_name && !currentUser?.epic_name) return;
+      setStatus(null);
       
-      if (supabase) {
-        const { data: authData } = await supabase.auth.getUser();
-        const userId = authData?.user?.id || authUserId;
-        if (!userId) return;
+      if (!formData.epic_name?.trim() && !currentUser?.epic_name) {
+        setStatus({ type: 'error', text: "Le pseudo Epic Games est obligatoire pour continuer." });
+        return;
+      }
+      
+      if (!supabase) {
+        setStatus({ type: 'error', text: "Erreur technique : Connexion à la base de données impossible." });
+        return;
+      }
 
-        const storedReferredBy = localStorage.getItem('fnmate_referred_by');
-        const finalRefCode = currentUser?.ref_code || formData.ref_code || Math.floor(1000 + Math.random() * 9000).toString();
-        const finalReferredBy = currentUser?.referred_by || formData.referred_by || storedReferredBy || undefined;
+      setIsSaving(true);
+      
+      const { data: authData } = await supabase.auth.getUser();
+      const userId = authData?.user?.id || authUserId;
+      
+      if (!userId) {
+        setStatus({ type: 'error', text: "Tu dois être connecté pour créer ton profil." });
+        setIsSaving(false);
+        return;
+      }
 
-        const { data, error } = await supabase.from('profiles').upsert({
-          id: userId,
-          epic_name: formData.epic_name || currentUser?.epic_name || 'Joueur',
-          age: formData.age || null,
-          country: formData.country || 'FR',
-          bio: formData.bio || '',
-          rank: formData.rank || 'Gold',
-          mode_preference: selectedModes.join(', '),
-          play_style: formData.play_style || '',
-          build_score: formData.build_score || 50,
-          aim_score: formData.aim_score || 50,
-          iq_score: formData.iq_score || 50,
-          role: formData.role || 'Fragger',
-          avatar_url: formData.avatar_url || null,
-          has_badge: currentUser?.has_badge || false,
-          platform: formData.platform || '',
-          ref_code: finalRefCode,
-          referred_by: finalReferredBy
-        }).select().single();
+      let storedReferredBy = null;
+      try {
+        storedReferredBy = localStorage.getItem('fnmate_referred_by');
+      } catch (e) {}
 
-        if (error) {
-          setStatus({ type: 'error', text: "Erreur lors de la sauvegarde." });
-          return;
-        }
+      const finalRefCode = currentUser?.ref_code || formData.ref_code || Math.floor(1000 + Math.random() * 9000).toString();
+      const finalReferredBy = currentUser?.referred_by || formData.referred_by || storedReferredBy || undefined;
 
-        if (storedReferredBy && !currentUser?.referred_by) {
-          localStorage.removeItem('fnmate_referred_by');
-        }
+      const { data, error } = await supabase.from('profiles').upsert({
+        id: userId,
+        epic_name: formData.epic_name?.trim() || currentUser?.epic_name || 'Joueur',
+        age: formData.age || null,
+        country: formData.country || 'FR',
+        bio: formData.bio || '',
+        rank: formData.rank || 'Gold',
+        mode_preference: selectedModes.join(', '),
+        play_style: formData.play_style || '',
+        build_score: formData.build_score || 50,
+        aim_score: formData.aim_score || 50,
+        iq_score: formData.iq_score || 50,
+        role: formData.role || 'Fragger',
+        avatar_url: formData.avatar_url || null,
+        has_badge: currentUser?.has_badge || false,
+        platform: formData.platform || '',
+        ref_code: finalRefCode,
+        referred_by: finalReferredBy
+      }).select().single();
 
-        const isFirstTime = !currentUser;
+      if (error) {
+        console.error("Supabase upsert error:", error);
+        setStatus({ type: 'error', text: "Impossible de sauvegarder : " + (error.message || "Erreur inconnue") });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        setIsSaving(false);
+        return;
+      }
+
+      try {
+        localStorage.removeItem('fnmate_referred_by');
+      } catch (e) {}
+
+      const isFirstTime = !currentUser;
+      
+      setCurrentUser(data);
+      if (showSuccess) {
+        setStatus({ type: 'success', text: isFirstTime ? "Profil créé avec succès ! ✅" : "Modifications sauvegardées ✅" });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
         
-        setCurrentUser(data);
-        if (showSuccess) {
-          setStatus({ type: 'success', text: isFirstTime ? "Profil créé avec succès ! ✅" : "Modifications sauvegardées ✅" });
-          
-          if (isFirstTime) {
-            // First time creation: show tutorial and redirect
-            setShowTutorial(true);
-            // Tutorial overlay will handle navigation, but just in case
-            setTimeout(() => setStatus(null), 3000);
-          } else {
-            setTimeout(() => setStatus(null), 3000);
-          }
+        if (isFirstTime) {
+          setShowTutorial(true);
+          setTimeout(() => setStatus(null), 3000);
+        } else {
+          setTimeout(() => setStatus(null), 3000);
         }
       }
     } catch (err: any) {
       console.error("Auto-save error:", err);
+      setStatus({ type: 'error', text: "Une erreur critique est survenue." });
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -445,10 +470,15 @@ export default function ProfilePage() {
             <div className="mt-6">
               <button 
                 onClick={() => handleSave(true)}
-                className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-blue-600 hover:bg-blue-700 text-white font-black uppercase tracking-wider rounded-xl transition-all active:scale-[0.98] shadow-lg shadow-blue-600/20"
+                disabled={isSaving}
+                className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-blue-600 hover:bg-blue-700 text-white font-black uppercase tracking-wider rounded-xl transition-all active:scale-[0.98] shadow-lg shadow-blue-600/20 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <Save size={20} />
-                {currentUser ? 'Sauvegarder mon profil' : 'Créer mon profil et Commencer'}
+                {isSaving ? (
+                  <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                ) : (
+                  <Save size={20} />
+                )}
+                {isSaving ? 'Traitement...' : (currentUser ? 'Sauvegarder mon profil' : 'Créer mon profil et Commencer')}
               </button>
             </div>
           </div>
