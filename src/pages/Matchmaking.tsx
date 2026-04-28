@@ -104,7 +104,7 @@ export default function Matchmaking() {
 
   const startMatchmaking = async () => {
     if (!canUseMatchmaking) {
-      alert("Tu as atteint ta limite de 3 matchmakings gratuits aujourd'hui. Passe au plan Grinder ou Elite pour continuer !");
+      alert("Tu as atteint ta limite de 3 matchmakings gratuits aujourd'hui. Passe au plan Tryharder ou Elite pour continuer !");
       return;
     }
     
@@ -201,8 +201,19 @@ export default function Matchmaking() {
       matchScore: currentUser ? calculateSynergy(currentUser, u, synergyMode) : undefined
     }))
     .sort((a, b) => {
-      if (a.has_badge && !b.has_badge) return -1;
-      if (!a.has_badge && b.has_badge) return 1;
+      // 1. ELITE (PRO) Plan Priority
+      const aIsElite = a.plan === 'pro';
+      const bIsElite = b.plan === 'pro';
+      if (aIsElite && !bIsElite) return -1;
+      if (!aIsElite && bIsElite) return 1;
+
+      // 2. TRYHARDER (GRINDER) or BADGE Priority
+      const aHasPriority = a.plan === 'grinder' || a.has_badge;
+      const bHasPriority = b.plan === 'grinder' || b.has_badge;
+      if (aHasPriority && !bHasPriority) return -1;
+      if (!aHasPriority && bHasPriority) return 1;
+
+      // 3. Match Score
       if (a.matchScore && b.matchScore) return b.matchScore - a.matchScore;
       return 0;
     });

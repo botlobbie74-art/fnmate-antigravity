@@ -49,10 +49,18 @@ export default function PlayersList() {
 
     return true;
   }).sort((a, b) => {
-    if (a.has_badge && !b.has_badge) return -1;
-    if (!a.has_badge && b.has_badge) return 1;
-    if (a.plan === 'pro' && b.plan !== 'pro') return -1;
-    if (a.plan !== 'pro' && b.plan === 'pro') return 1;
+    // 1. ELITE (PRO) Plan Priority
+    const aIsElite = a.plan === 'pro';
+    const bIsElite = b.plan === 'pro';
+    if (aIsElite && !bIsElite) return -1;
+    if (!aIsElite && bIsElite) return 1;
+
+    // 2. TRYHARDER (GRINDER) or BADGE Priority
+    const aHasPriority = a.plan === 'grinder' || a.has_badge;
+    const bHasPriority = b.plan === 'grinder' || b.has_badge;
+    if (aHasPriority && !bHasPriority) return -1;
+    if (!aHasPriority && bHasPriority) return 1;
+
     return 0;
   });
 

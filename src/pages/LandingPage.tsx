@@ -231,11 +231,11 @@ export default function LandingPage() {
                 disabled={loadingPlan === 'pro'}
                 className="w-full py-3 rounded-xl bg-purple-600/20 hover:bg-purple-600/40 group-hover:bg-yellow-400/20 group-hover:border-yellow-400/50 group-hover:text-yellow-300 text-purple-300 font-bold transition-colors border border-purple-500/30 block text-center disabled:opacity-50"
               >
-                {loadingPlan === 'pro' ? 'Création de la session...' : 'Passer Elite'}
+                {loadingPlan === 'pro' ? 'Création de la session...' : 'Devenir Elite'}
               </button>
             ) : (
               <Link to="/auth" className="w-full py-3 rounded-xl bg-purple-600/20 hover:bg-purple-600/40 group-hover:bg-yellow-400/20 group-hover:border-yellow-400/50 group-hover:text-yellow-300 text-purple-300 font-bold transition-colors border border-purple-500/30 block text-center">
-                Passer Elite
+                Devenir Elite
               </Link>
             )}
           </div>

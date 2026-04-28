@@ -33,11 +33,11 @@ export function PaymentCallback() {
         switch(plan) {
           case 'pro':
             updates = { plan: 'pro' };
-            successMessage = "Bienvenue dans l'Élite PRO ! Tes avantages sont débloqués.";
+            successMessage = "Bienvenue dans l'Élite ! Tes avantages sont débloqués.";
             break;
           case 'grinder':
             updates = { plan: 'grinder' };
-            successMessage = "Pass Grinder activé. Écrase la concurrence.";
+            successMessage = "Pass Tryharder activé. Écrase la concurrence.";
             break;
           case 'match-divin':
             updates = { 

@@ -27,7 +27,7 @@ const TUTORIAL_STEPS = [
   {
     icon: <Crown size={40} className="text-yellow-500" />,
     title: "Deviens une Légende",
-    description: "Passe au plan Grinder ou Elite pour ignorer la file d'attente, activer le bouclier anti-toxique et obtenir le matchmaking instantané.",
+    description: "Passe au plan Tryharder ou Elite pour ignorer la file d'attente, activer le bouclier anti-toxique et obtenir le matchmaking instantané.",
     bg: "from-yellow-500 to-orange-500",
     path: "/billing"
   }

@@ -21,8 +21,8 @@ export default function Billing() {
   }, []);
 
   const getPlanName = () => {
-    if (isPro) return "PRO (Élite)";
-    if (isGrinder) return "GRINDER";
+    if (isPro) return "ELITE";
+    if (isGrinder) return "TRYHARDER";
     return "Bambi (Gratuit)";
   };
 
@@ -125,7 +125,7 @@ export default function Billing() {
         <div className="glass rounded-3xl p-8 border border-blue-500/20 relative overflow-hidden group">
           <div className="absolute inset-0 bg-blue-600/5 group-hover:bg-blue-600/10 transition-colors"></div>
           <div className="relative">
-            <h4 className="text-xl font-black text-blue-400 mb-2">Plan GRINDER</h4>
+            <h4 className="text-xl font-black text-blue-400 mb-2">Plan TRYHARDER</h4>
             <p className="text-3xl font-black text-white mb-4">4.99€<span className="text-sm text-slate-500 font-normal">/mois</span></p>
             <ul className="space-y-3 mb-8">
               <li className="flex items-center gap-2 text-sm text-slate-300">
@@ -147,7 +147,7 @@ export default function Billing() {
                   : 'bg-blue-600/20 hover:bg-blue-600/40 text-blue-400 border-blue-500/30'
               }`}
             >
-              {loadingPlan === 'grinder' ? <Loader2 size={20} className="animate-spin" /> : isPro || isGrinder ? 'Déjà Actif' : 'Passer GRINDER'}
+              {loadingPlan === 'grinder' ? <Loader2 size={20} className="animate-spin" /> : isPro || isGrinder ? 'Déjà Actif' : 'Passer TRYHARDER'}
             </button>
           </div>
         </div>
@@ -180,7 +180,7 @@ export default function Billing() {
                   : 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white shadow-lg shadow-purple-500/20'
               }`}
             >
-               {loadingPlan === 'pro' ? <Loader2 size={20} className="animate-spin" /> : isPro ? 'Déjà Actif' : 'Passer PRO'}
+               {loadingPlan === 'pro' ? <Loader2 size={20} className="animate-spin" /> : isPro ? 'Déjà Actif' : 'Passer ELITE'}
             </button>
           </div>
         </div>
